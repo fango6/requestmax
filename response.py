@@ -1,6 +1,7 @@
 import bs4
 import requests
 from parsel import Selector
+from requests.utils import guess_json_utf
 
 
 class Extracter:
@@ -42,4 +43,13 @@ class Extracter:
 
 class Response(requests.Response, Extracter):
     """ In order to embed Selector and BeautifulSoup """
-    pass
+
+    def _guess_encoding(self):
+        if self.content and len(self.content) > 3:
+            encoding = self.apparent_encoding
+            if not encoding and not self.encoding:
+                encoding = guess_json_utf(self.content)
+
+            if encoding and self.encoding != encoding:
+                self.encoding = encoding
+        return self.encoding

@@ -17,6 +17,7 @@ class Adapter(HTTPAdapter):
         response.headers = CaseInsensitiveDict(getattr(resp, 'headers', {}))
 
         response.encoding = get_encoding_from_headers(response.headers)
+        response.encoding = response._guess_encoding()
         response.raw = resp
         response.reason = response.raw.reason
 
