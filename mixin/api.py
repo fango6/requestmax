@@ -1,4 +1,4 @@
-from requestmax.sessions import Session
+from requestmax.mixin.sessions import Session
 
 
 def request(method, url, **kwargs):

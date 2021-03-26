@@ -3,7 +3,7 @@ from requests.cookies import extract_cookies_to_jar
 from requests.structures import CaseInsensitiveDict
 from requests.utils import get_encoding_from_headers
 
-from requestmax.response import Response
+from .response import Response
 
 
 class Adapter(HTTPAdapter):
@@ -17,7 +17,6 @@ class Adapter(HTTPAdapter):
         response.headers = CaseInsensitiveDict(getattr(resp, 'headers', {}))
 
         response.encoding = get_encoding_from_headers(response.headers)
-        response.encoding = response._guess_encoding()
         response.raw = resp
         response.reason = response.raw.reason
 
@@ -30,5 +29,6 @@ class Adapter(HTTPAdapter):
 
         response.request = req
         response.connection = self
+        response.encoding = response._guess_encoding()
 
         return response

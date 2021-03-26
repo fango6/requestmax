@@ -1,7 +1,24 @@
+import re
+
 import bs4
 import requests
-from parsel import Selector
+import six
+from parsel import Selector as ParselSelector
+from parsel.utils import extract_regex as parsel_extract_regex
 from requests.utils import guess_json_utf
+
+
+def extract_regex(regex, text, replace_entities=True):
+    if isinstance(regex, six.string_types):
+        # "." matches any character at all, including the newline.
+        regex = re.compile(regex, re.UNICODE | re.DOTALL)
+    return parsel_extract_regex(regex, text, replace_entities)
+
+
+class Selector(ParselSelector):
+
+    def re(self, regex, replace_entities=True):
+        return extract_regex(regex, self.get(), replace_entities=replace_entities)
 
 
 class Extracter:
