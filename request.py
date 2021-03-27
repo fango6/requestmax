@@ -8,7 +8,9 @@ disable_warnings()
 
 def make_default_proxies(default_proxies):
     """ @return: a function for getting proxies. """
-    if isinstance(default_proxies, dict) or callable(default_proxies):
+    if callable(default_proxies):
+        return default_proxies
+    elif isinstance(default_proxies, dict):
         # 已经设置了正确的代理格式
         return lambda: default_proxies
     elif isinstance(default_proxies, str) and '@' in default_proxies:
