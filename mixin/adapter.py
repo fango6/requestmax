@@ -28,6 +28,7 @@ class Adapter(HTTPAdapter):
 
         response.request = req
         response.connection = self
-        response.encoding = response._guess_encoding()
+        # 检查并修正上面的编码问题
+        response.encoding = response._revise_encoding()
 
         return response

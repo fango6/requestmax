@@ -61,7 +61,8 @@ class Extracter:
 class Response(requests.Response, Extracter):
     """ In order to embed Selector and BeautifulSoup """
 
-    def _guess_encoding(self):
+    def _revise_encoding(self):
+        """ 检查并修正部分的编码不正确问题 """
         if self.content and len(self.content) > 3:
             encoding = self.apparent_encoding
             if not encoding and not self.encoding:
