@@ -9,7 +9,7 @@ def get_simple():
     print(response.xpath('//head/title/text()').get())
     # 可以多行匹配的正则
     print(response.re_first('百度.+知道'))
-    # 贪婪模式
+    # 贪婪匹配
     print(response.re_first('百度.+?知道'))
 
 
@@ -27,7 +27,7 @@ def request_simple():
     print(response.xpath('//head/title/text()').get())
     # 可以多行匹配的正则
     print(response.re_first('百度.+知道'))
-    # 贪婪模式
+    # 贪婪匹配
     print(response.re_first('百度.+?知道'))
 
 

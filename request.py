@@ -1,5 +1,3 @@
-import sys
-
 from urllib3 import disable_warnings
 
 from requestmax.mixin import api, sessions

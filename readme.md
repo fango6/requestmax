@@ -32,7 +32,7 @@ import requestmax
 
 def request_simple():
     """
-    verify: 是否验证服务器的 SSL 证书, 默认 False 即否了.
+    verify: 是否验证服务器的 SSL 证书, 默认 False 即否.
     cookie_enable: 是否要处理 cookies.
     random_ua: 随机更换 user-agent.
     default_timeout: 默认请求超时时间.
@@ -68,6 +68,6 @@ def request_simple():
 cd requestmax/
 python setup.py sdist
 pip install .
-# rm -rf ./requestmax.egg-info ./dist
+rm -rf ./requestmax.egg-info ./dist
 ```
 
