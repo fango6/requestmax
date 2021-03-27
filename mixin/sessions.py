@@ -2,10 +2,25 @@ from collections import OrderedDict
 
 import requests
 from requestmax.mixin.adapter import Adapter
-from requestmax.utils import default_headers
 from requests.cookies import cookiejar_from_dict
 from requests.hooks import default_hooks
 from requests.models import DEFAULT_REDIRECT_LIMIT
+from requests.structures import CaseInsensitiveDict
+from urllib3 import disable_warnings
+
+disable_warnings()
+
+
+def default_headers():
+    """
+    :rtype: requests.structures.CaseInsensitiveDict
+    """
+    return CaseInsensitiveDict({
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.82 Safari/537.36',
+        'Accept-Encoding': 'gzip, deflate',
+        'Accept': '*/*',
+        'Connection': 'keep-alive',
+    })
 
 
 class Session(requests.Session):

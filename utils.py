@@ -1,17 +1,17 @@
-from requests.structures import CaseInsensitiveDict
+import sys
+
+import requests
 from user_agent import generate_user_agent
 
 
-def default_headers():
-    """
-    :rtype: requests.structures.CaseInsensitiveDict
-    """
-    return CaseInsensitiveDict({
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.82 Safari/537.36',
-        'Accept-Encoding': 'gzip, deflate',
-        'Accept': '*/*',
-        'Connection': 'keep-alive',
-    })
+def get_platform():
+    ''' 获取操作系统标识, 以用作 gen_ua 函数的 os 参数
+    '''
+    if sys.platform == "darwin":
+        return "mac"
+    elif "win" in sys.platform:
+        return "win"
+    return "linux"
 
 
 def gen_ua(os=None, device_type=None, navigator=None, platform=None):
@@ -22,3 +22,16 @@ def gen_ua(os=None, device_type=None, navigator=None, platform=None):
         platform: like "Windows NT 5.1; WOW64"
     '''
     return generate_user_agent(os, device_type=device_type, navigator=navigator, platform=platform)
+
+
+def fetch_proxies_by_url(proxy_url, method="GET", **kwargs):
+    response = requests.request(method, proxy_url, **kwargs)
+    ipv4 = response.text
+    if ':' in ipv4:
+        ipv4 = ipv4.split(':', 1)[0]
+    if not requests.utils.is_ipv4_address(ipv4):
+        raise TypeError("代理 ip 格式有误", response.text)
+    return {
+        "http": "http://{}".format(response.text.strip()),
+        "https": "https://{}".format(response.text.strip()),
+    }

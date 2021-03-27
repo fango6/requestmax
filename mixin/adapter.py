@@ -1,9 +1,8 @@
+from requestmax.mixin.response import Response
 from requests.adapters import HTTPAdapter
 from requests.cookies import extract_cookies_to_jar
 from requests.structures import CaseInsensitiveDict
 from requests.utils import get_encoding_from_headers
-
-from .response import Response
 
 
 class Adapter(HTTPAdapter):

@@ -1,34 +1,59 @@
 import sys
 
+from urllib3 import disable_warnings
+
 from requestmax.mixin import api, sessions
-from requestmax.utils import default_headers, gen_ua
+from requestmax.utils import fetch_proxies_by_url, gen_ua, get_platform
+
+disable_warnings()
+
+
+def set_default_proxies(default_proxies):
+    # self.default_proxies is callable
+    if isinstance(default_proxies, dict):
+        # 已经设置了正确的代理格式
+        return lambda: default_proxies
+    elif isinstance(default_proxies, str) and '@' in default_proxies:
+        # 独享代理/ 用户认证
+        return lambda: {
+            "http": "http://{}".format(default_proxies),
+            "https": "https://{}".format(default_proxies),
+        }
+    elif default_proxies:
+        # 从代理池中获取, 会请求链接
+        return fetch_proxies_by_url
+    return None
 
 
 class Request:
     """
-    verify: https 认证, 方便起见就默认成 False, 关闭认证了.
-    cookie_enable: 命名参考了 scrapy, 要不要再下一个请求中延续使用 cookie.
-    random_ua: 随机更换 user-agent.
-    default_timeout: 默认请求超时时间.
+    @desc: hook requests.Session.
+    @params:
+        verify: 是否验证服务器的 SSL 证书, 默认 False 即否.
+        cookie_enable: 是否要处理 cookies.
+        random_ua: 随机更换 user-agent.
+        default_timeout: 默认请求超时时间.
+        default_proxies: 默认请求代理.
     """
 
-    def __init__(self, verify=False, cookie_enable=True, random_ua=False, default_timeout=10):
+    def __init__(self, verify=False, cookie_enable=True, random_ua=False, default_timeout=10, default_proxies=None):
+        self.verify = verify
+        self.cookie_enable = cookie_enable
         if cookie_enable:
             self.sess = sessions.Session()
             self.sess.verify = verify
         else:
             self.sess = api
-        self.verify = verify
-        self.cookie_enable = cookie_enable
+
         self.random_ua = random_ua
+        # only set self._platform attribute when random_ua is True
         if random_ua:
-            if sys.platform == "darwin":
-                self._platform = "mac"
-            elif "win" in sys.platform:
-                self._platform = "win"
-            else:
-                self._platform = "linux"
+            self._platform = get_platform()
+
+        # setting request default timeout.
         self.default_timeout = default_timeout
+        # setting request default proxies.
+        self.default_proxies = set_default_proxies(default_proxies)
 
     def request(self, method, url,
                 params=None, data=None, headers=None, cookies=None, files=None,
@@ -44,6 +69,8 @@ class Request:
             ua_name_lower = ua_name.lower()
             ua_name = ua_name_lower if ua_name_lower in headers else ua_name
             headers[ua_name] = gen_ua(os=self._platform)
+        if proxies is None and callable(self.default_proxies):
+            proxies = self.default_proxies()
         return self.sess.request(
             method, url,
             params=params, data=data, headers=headers, cookies=cookies, files=files,
