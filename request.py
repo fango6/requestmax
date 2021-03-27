@@ -6,23 +6,26 @@ from requestmax.utils import fetch_proxies_by_url, gen_ua, get_platform
 disable_warnings()
 
 
-def make_default_proxies(default_proxies):
-    """ @return: a function for getting proxies. """
-    if callable(default_proxies):
+def make_proxies_struct(default_proxies):
+    """ @return: a tuple contains a function for getting proxies, and function's kwargs. """
+    if not default_proxies:
+        return
+    if isinstance(default_proxies, (tuple, list)):
+        if not callable(default_proxies[0]):
+            raise TypeError("default_proxies[0] uncallable", default_proxies)
         return default_proxies
     elif isinstance(default_proxies, dict):
         # 已经设置了正确的代理格式
-        return lambda: default_proxies
+        return lambda: default_proxies, {}
     elif isinstance(default_proxies, str) and '@' in default_proxies:
         # 独享代理/ 用户认证
         return lambda: {
             "http": "http://{}".format(default_proxies),
             "https": "https://{}".format(default_proxies),
-        }
-    elif default_proxies:
+        }, {}
+    elif isinstance(default_proxies, str):
         # 从代理池中获取, 会请求链接
-        return fetch_proxies_by_url
-    return None
+        return fetch_proxies_by_url, {"proxy_url": default_proxies}
 
 
 class Request:
@@ -36,7 +39,7 @@ class Request:
         default_proxies: 默认代理, (e.g.
             {'http': 'foo.bar:3128', 'http://host.name': 'foo.bar:4012'}
             or 'http://proxy.pool.com'
-            or your custom function
+            or (custom function, kwargs)
         )
     """
 
@@ -57,7 +60,7 @@ class Request:
         # setting request default timeout.
         self.default_timeout = default_timeout
         # setting request default proxies.
-        self.default_proxies = make_default_proxies(default_proxies)
+        self.proxies_struct = make_proxies_struct(default_proxies)
 
     def request(self, method, url,
                 params=None, data=None, headers=None, cookies=None, files=None,
@@ -73,8 +76,9 @@ class Request:
             ua_name_lower = ua_name.lower()
             ua_name = ua_name_lower if ua_name_lower in headers else ua_name
             headers[ua_name] = gen_ua(os=self._platform)
-        if proxies is None and callable(self.default_proxies):
-            proxies = self.default_proxies()
+        if proxies is None and self.proxies_struct:
+            func, kwargs = self.proxies_struct
+            proxies = func(**kwargs)
         return self.sess.request(
             method, url,
             params=params, data=data, headers=headers, cookies=cookies, files=files,
