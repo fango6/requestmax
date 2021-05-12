@@ -10,7 +10,7 @@ setup(
     version="1.0",
     description="A stronger requests in the aspect of response.",
     author="trent",
-    author_email="trentfzq8888@163.com",
+    author_email="fango8888@163.com",
     url="https://gitee.com/trentfzq/requestmax",
     packages=find_packages(),
 

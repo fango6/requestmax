@@ -3,4 +3,4 @@ from requestmax.mixin.api import (
 from requestmax.mixin.sessions import Session
 from requestmax.request import Request
 
-__author__ = "trentfzq8888@163.com"
+__author__ = "fango8888@163.com"
