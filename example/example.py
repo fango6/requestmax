@@ -1,18 +1,6 @@
-修改 requests 框架源码, 主要对其中的 response 增加了 `parsel.Selector` 和 `bs4.BeautifulSoup` 的功能.
-并对 `parsel.Selector` 的 re 和 re_first 两个方法增加 `re.DOTALL` 匹配模式, 即增加多行匹配功能.
-
-email: *`fango8888@163.com`*
-
-
-
-## get 示例
-
-`requestmax` 的使用方式和 `requests` 差不多, 但可以直接对 response 对象使用 xpath 和 find 等功能.
-
-访问 https 的网站也不会告警了.
-
-```python
 import requestmax
+from requestmax.utils import FetchProxiesAbstract
+
 
 def get_example():
     url = 'https://www.baidu.com'
@@ -22,20 +10,9 @@ def get_example():
     print(response.xpath('//head/title/text()').get())
     # 可以多行匹配的正则
     print(response.re_first('百度.+知道'))
-    # 贪婪模式
+    # 贪婪匹配
     print(response.re_first('百度.+?知道'))
 
-get_example()
-```
-
-
-
-## 使用 session, 即处理 cookie 的示例
-
-同时简单封装了一个 Request 类. 可以通过不同的参数来选择不同的功能, 比如可以通过 `cookie_enable` 参数来选择是否使用 session 功能.
-
-```python
-import requestmax
 
 def request_example():
     # verify=False: 不做 https 验证;
@@ -58,15 +35,6 @@ def request_example():
     # 贪婪匹配
     print(response.re_first('百度.+?知道'))
 
-request_example()
-```
-
-
-
-## 设置默认代理示例
-
-```python
-from requestmax.utils import FetchProxiesAbstract
 
 class FetchProxies(FetchProxiesAbstract):
     """
@@ -82,7 +50,7 @@ class FetchProxies(FetchProxiesAbstract):
         }
 
     def fetch_proxies(self):
-        # 返回 requests 支持的代理 ip 数据结构.
+        # 返回代理 ip
         response = requestmax.request(**self.kwargs)
         ipv4 = response.text
         if ':' in ipv4:
@@ -93,6 +61,7 @@ class FetchProxies(FetchProxiesAbstract):
             "http": "http://{}".format(response.text.strip()),
             "https": "https://{}".format(response.text.strip()),
         }
+
 
 def request_proxies_example():
     # fetch_proxies_cls: 设置获取代理实例, 必须实现 fetch_proxies 方法;
@@ -114,19 +83,8 @@ def request_proxies_example():
     # 贪婪匹配
     print(response.re_first('百度.+?知道'))
 
-request_proxies_example()
-```
 
-
-
-
-
-没有发布 pypi, 可以本地安装
-
-``` shell
-cd requestmax/
-python setup.py sdist
-pip install .
-rm -rf ./requestmax.egg-info ./dist
-```
-
+if __name__ == "__main__":
+    # get_example()
+    request_example()
+    # request_proxies_example()

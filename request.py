@@ -1,31 +1,9 @@
 from urllib3 import disable_warnings
 
 from requestmax.mixin import api, sessions
-from requestmax.utils import fetch_proxies_by_url, gen_ua, get_platform
+from requestmax.utils import FetchProxiesAbstract, gen_ua, get_platform
 
 disable_warnings()
-
-
-def make_proxies_struct(default_proxies):
-    """ @return: a tuple contains a function for getting proxies, and function's kwargs. """
-    if not default_proxies:
-        return
-    if isinstance(default_proxies, (tuple, list)):
-        if not callable(default_proxies[0]):
-            raise TypeError("default_proxies[0] uncallable", default_proxies)
-        return default_proxies
-    elif isinstance(default_proxies, dict):
-        # 已经设置了正确的代理格式
-        return lambda: default_proxies, {}
-    elif isinstance(default_proxies, str) and '@' in default_proxies:
-        # 独享代理/ 用户认证
-        return lambda: {
-            "http": "http://{}".format(default_proxies),
-            "https": "https://{}".format(default_proxies),
-        }, {}
-    elif isinstance(default_proxies, str):
-        # 从代理池中获取, 会请求链接
-        return fetch_proxies_by_url, {"proxy_url": default_proxies}
 
 
 class Request:
@@ -36,14 +14,10 @@ class Request:
         cookie_enable: 是否要处理 cookies.
         random_ua: 随机更换 user-agent.
         default_timeout: 默认请求超时时间.
-        default_proxies: 默认代理, (e.g.
-            {'http': 'foo.bar:3128', 'http://host.name': 'foo.bar:4012'}
-            or 'http://proxy.pool.com'
-            or (custom function, kwargs)
-        )
+        fetch_proxies_cls: 获取代理的类, 该类必须实现 fetch_proxies 方法, 以便获取代理, (参考 FetchProxiesAbstract).
     """
 
-    def __init__(self, verify=False, cookie_enable=True, random_ua=False, default_timeout=10, default_proxies=None):
+    def __init__(self, verify=False, cookie_enable=True, random_ua=False, default_timeout=10, fetch_proxies_cls: FetchProxiesAbstract = None):
         self.verify = verify
         self.cookie_enable = cookie_enable
         if cookie_enable:
@@ -60,7 +34,7 @@ class Request:
         # setting request default timeout.
         self.default_timeout = default_timeout
         # setting request default proxies.
-        self.proxies_struct = make_proxies_struct(default_proxies)
+        self.fetch_proxies_cls = fetch_proxies_cls
 
     def request(self, method, url,
                 params=None, data=None, headers=None, cookies=None, files=None,
@@ -76,9 +50,8 @@ class Request:
             ua_name_lower = ua_name.lower()
             ua_name = ua_name_lower if ua_name_lower in headers else ua_name
             headers[ua_name] = gen_ua(os=self._platform)
-        if proxies is None and self.proxies_struct:
-            func, kwargs = self.proxies_struct
-            proxies = func(**kwargs)
+        if self.fetch_proxies_cls:
+            proxies = self.fetch_proxies_cls.fetch_proxies()
         return self.sess.request(
             method, url,
             params=params, data=data, headers=headers, cookies=cookies, files=files,

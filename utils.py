@@ -1,3 +1,4 @@
+import socket
 import sys
 
 import requests
@@ -24,14 +25,53 @@ def gen_ua(os=None, device_type=None, navigator=None, platform=None):
     return generate_user_agent(os, device_type=device_type, navigator=navigator, platform=platform)
 
 
-def fetch_proxies_by_url(proxy_url, method="GET", **kwargs):
-    response = requests.request(method, proxy_url, **kwargs)
-    ipv4 = response.text
-    if ':' in ipv4:
-        ipv4 = ipv4.split(':', 1)[0]
-    if not requests.utils.is_ipv4_address(ipv4):
-        raise TypeError("代理 ip 格式有误", response.text)
-    return {
-        "http": "http://{}".format(response.text.strip()),
-        "https": "https://{}".format(response.text.strip()),
-    }
+def is_ipv4_address(string_ip):
+    """
+    :rtype: bool
+    """
+    try:
+        socket.inet_aton(string_ip)
+    except socket.error:
+        return False
+    return True
+
+
+class FetchProxiesAbstract:
+
+    @property
+    def kwargs(self) -> dict:
+        """
+        @return: 请求所携带的参数
+        """
+        raise NotImplementedError
+
+    def fetch_proxies(self) -> dict:
+        """
+        @return: 返回代理 ip.
+        """
+        raise NotImplementedError
+
+
+class FetchProxies(FetchProxiesAbstract):
+    """
+    获取代理的类, 该类必须实现 fetch_proxies 方法, 以便获取代理.
+    """
+
+    @property
+    def kwargs(self):
+        return {
+            "proxy_url": "http://proxy.io.com",
+            "method": "GET",
+        }
+
+    def fetch_proxies(self):
+        response = requests.request(**self.kwargs)
+        ipv4 = response.text
+        if ':' in ipv4:
+            ipv4 = ipv4.split(':', 1)[0]
+        if not is_ipv4_address(ipv4):
+            raise TypeError("代理 ip 格式有误", response.text)
+        return {
+            "http": "http://{}".format(response.text.strip()),
+            "https": "https://{}".format(response.text.strip()),
+        }
