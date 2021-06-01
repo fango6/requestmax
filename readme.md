@@ -1,7 +1,7 @@
 修改 requests 框架源码, 主要对其中的 response 增加了 `parsel.Selector` 和 `bs4.BeautifulSoup` 的功能.
 并对 `parsel.Selector` 的 re 和 re_first 两个方法增加 `re.DOTALL` 匹配模式, 即增加多行匹配功能.
 
-email: *`fango8888@163.com`*
+email: *`fango6@qq.com`*
 
 
 
